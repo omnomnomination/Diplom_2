@@ -7,23 +7,24 @@ def registered_user():
     payload = generate_user_payload()
     response = register_user(payload)
     
-    # Если юзер не создался, выводим сообщение с ошибкой
-    assert response.status_code == 200, f"Не удалось создать юзера: {response.text}"
+    if response.status_code != 200:
+        raise Exception(f"Не удалось создать юзера: {response.text}")
     
     access_token = response.json()["accessToken"]
     
     yield payload
     
-    # Удаление юзера после теста
     delete_user(access_token)
 
 @pytest.fixture
 def auth_token(registered_user):
     login_response = login_user(registered_user)
-    assert login_response.status_code == 200
+    
+    if login_response.status_code != 200:
+        raise Exception(f"Не удалось авторизоваться: {login_response.text}")
+        
     return login_response.json()["accessToken"]
 
-# Создает и удаляет юзера
 @pytest.fixture
 def user_cleanup():
     created_tokens = []

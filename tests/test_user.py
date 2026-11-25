@@ -1,16 +1,22 @@
 import allure
-from api import register_user
+from api import register_user, delete_user
 from helpers import generate_user_payload
 
 class TestUserCreation:
 
     @allure.title("Создание уникального пользователя")
-    def test_create_unique_user(self, user_cleanup):
+    def test_create_unique_user(self):
         payload = generate_user_payload()
-        response = user_cleanup(payload)
         
-        assert response.status_code == 200
-        assert "accessToken" in response.json()
+        response = register_user(payload)
+        
+        try:
+            assert response.status_code == 200
+            assert "accessToken" in response.json()
+        finally:
+            if response.status_code == 200:
+                token = response.json()["accessToken"]
+                delete_user(token)
 
     @allure.title("Создание пользователя, который уже зарегистрирован")
     def test_create_duplicate_user(self, registered_user):
